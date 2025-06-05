@@ -25,3 +25,8 @@ OR
 ```commandline
 docker compose run --rm app sh -c "python manage.py test"
 ```
+
+# Models
+
+### User Model
+The user model is a custom user model that extends the AbstractBaseUser class from Django, since it does not support email fields. The custom user model includes fields for email, name, is_active and is_staff statuses. The user model also includes methods for creating users and superusers.
