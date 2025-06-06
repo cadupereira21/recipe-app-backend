@@ -22,11 +22,30 @@ class TestModels(TestCase):
             ('test@EXAMPLE.COM', 'test@example.com'),
             ('Test@Example.COM', 'Test@example.com'),
             ('TEST@EXAMPLE.com', 'TEST@example.com'),
-            ('TeSt@eXaMpLe.CoM', 'TESt@example.com'),
+            ('TeSt@eXaMpLe.CoM', 'TeSt@example.com'),
         ]
 
         for input_email, expected_email in email_cases:
+            """ subTest allows us to run the same test with different inputs. If one test fails, it will not stop the 
+                others from running."""
             with self.subTest(input_email=input_email):
                 user = get_user_model().objects.create_user(email=input_email, password='testpassword')
                 self.assertEqual(user.email, expected_email)
 
+    def test_new_user_without_email_raises_error(self):
+        email_cases = [
+            None,
+            '',
+        ]
+
+        for email in email_cases:
+            with self.subTest(email=email):
+                with self.assertRaises(ValueError):
+                    get_user_model().objects.create_user(email=email, password='testpassword')
+
+    def test_create_superuser(self):
+        email = 'superuser@example.com'
+        password = 'superpassword'
+        super_user = get_user_model().objects.create_superuser(email=email, password=password)
+        self.assertTrue(super_user.is_superuser)
+        self.assertTrue(super_user.is_staff)
