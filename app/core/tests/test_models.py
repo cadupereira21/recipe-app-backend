@@ -18,10 +18,15 @@ class TestModels(TestCase):
         self.assertTrue(user.check_password(password))
 
     def test_new_user_email_normalized(self):
-        # TODO: Parameterize this test to check different email formats
+        email_cases = [
+            ('test@EXAMPLE.COM', 'test@example.com'),
+            ('Test@Example.COM', 'Test@example.com'),
+            ('TEST@EXAMPLE.com', 'TEST@example.com'),
+            ('TeSt@eXaMpLe.CoM', 'TESt@example.com'),
+        ]
 
-        email = 'test@EXAMPLE.com'
+        for input_email, expected_email in email_cases:
+            with self.subTest(input_email=input_email):
+                user = get_user_model().objects.create_user(email=input_email, password='testpassword')
+                self.assertEqual(user.email, expected_email)
 
-        user = get_user_model().objects.create_user(email=email, password='testpassword')
-
-        self.assertEqual(user.email, email.lower())
