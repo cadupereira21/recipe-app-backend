@@ -1,8 +1,12 @@
 """We are going to use TestCase since it has built-in support for database transactions and rollbacks. Because of
 that, it is considerably slower than SimpleTestCase, since it has a database setup overhead, but it is more suitable for testing models that interact with
 the database."""
+from decimal import Decimal
+
 from django.test import TestCase
 from django.contrib.auth import get_user_model
+
+from core import models
 
 
 class TestModels(TestCase):
@@ -49,3 +53,21 @@ class TestModels(TestCase):
         super_user = get_user_model().objects.create_superuser(email=email, password=password)
         self.assertTrue(super_user.is_superuser)
         self.assertTrue(super_user.is_staff)
+
+    def test_create_recipe(self):
+        user = get_user_model().objects.create_user(
+            'test@example.com',
+            'testpass123',
+        )
+
+        recipe = models.Recipe.objects.create(
+            user=user,
+            title='Sample recipe name',
+            description='Sample recipe description',
+            ingredients='Egg, Flour, Butter',
+            preparation='Sample preparation description',
+            time_minutes=5,
+            price=Decimal('5.50')
+        )
+
+        self.assertEqual(str(recipe), recipe.title)

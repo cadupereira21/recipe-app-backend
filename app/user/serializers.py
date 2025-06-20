@@ -15,13 +15,16 @@ class UserSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         password = validated_data.pop('password', None)
-        user = super().update(instance, validated_data)
 
         if password:
-            user.set_password(password)
-            user.save()
+            instance.set_password(password)
 
-        return user
+        # Update the rest of the fields
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+
+        instance.save()
+        return instance
 
 
 class AuthTokenSerializer(serializers.Serializer):
