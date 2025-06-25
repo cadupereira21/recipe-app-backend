@@ -7,7 +7,7 @@ from recipe import serializers
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
-    serializer_class = serializers.RecipeSerializer
+    serializer_class = serializers.RecipeDetailSerializer
     # Defines the object that will be managed by this view set
     queryset = Recipe.objects.all()
     authentication_classes = [TokenAuthentication]
@@ -16,3 +16,16 @@ class RecipeViewSet(viewsets.ModelViewSet):
     """Override get_queryset to filter the get to retrieve only the recipes associated with the user from the request"""
     def get_queryset(self):
         return self.queryset.filter(user=self.request.user).order_by('-id')
+
+    """This method is called by django when returning the details of a serializer
+    This way, all endpoints will use the RecipeDetailSerializer, excepting the list action."""
+    def get_serializer_class(self):
+        if self.action == 'list':
+            return serializers.RecipeSerializer
+
+        return self.serializer_class
+
+    def perform_create(self, serializer):
+        # This method is called after the validation
+        # When creating a new recipe, set user with the request's authenticated user
+        serializer.save(user=self.request.user)

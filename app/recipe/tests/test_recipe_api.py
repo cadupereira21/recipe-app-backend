@@ -9,9 +9,14 @@ from rest_framework.test import APIClient
 
 from core.models import Recipe
 
-from recipe.serializers import RecipeSerializer
+from recipe.serializers import RecipeSerializer, RecipeDetailSerializer
 
-LIST_RECIPES_URL = reverse('recipe:recipe-list')
+RECIPES_URL = reverse('recipe:recipe-list')
+
+
+# We'll define the url as a function because we need to pass the recipe_id
+def detail_url(recipe_id):
+    return reverse('recipe:recipe-detail', args=[recipe_id])
 
 
 def create_recipe(user, **params):
@@ -35,7 +40,7 @@ class PublicRecipeApiTests(TestCase):
         self.client = APIClient()
 
     def test_auth_required(self):
-        response = self.client.get(LIST_RECIPES_URL)
+        response = self.client.get(RECIPES_URL)
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
@@ -53,7 +58,7 @@ class PrivateRecipeApiTests(TestCase):
         create_recipe(user=self.user)
         create_recipe(user=self.user)
 
-        response = self.client.get(LIST_RECIPES_URL)
+        response = self.client.get(RECIPES_URL)
 
         recipes = Recipe.objects.all().order_by('-id')
         serializer = RecipeSerializer(recipes, many=True)
@@ -70,10 +75,37 @@ class PrivateRecipeApiTests(TestCase):
         create_recipe(user=other_user)
         create_recipe(user=self.user)
 
-        response = self.client.get(LIST_RECIPES_URL)
+        response = self.client.get(RECIPES_URL)
 
         recipes = Recipe.objects.filter(user=self.user)
         serializer = RecipeSerializer(recipes, many=True)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, serializer.data)
+
+    def test_get_recipe_details(self):
+        recipe = create_recipe(user=self.user)
+        url = detail_url(recipe.id)
+
+        response = self.client.get(url)
+
+        serializer = RecipeDetailSerializer(recipe)
+        self.assertEqual(response.data, serializer.data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_post_create_recipe(self):
+        payload = {
+            'title': 'Sample recipe',
+            'time_minutes': 30,
+            'price': Decimal('5.99'),
+        }
+
+        response = self.client.post(RECIPES_URL, payload)
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        recipe = Recipe.objects.get(id=response.data['id'])
+
+        for k, v in payload.items():
+            self.assertEqual(getattr(recipe, k), v)
+
+        self.assertEqual(recipe.user, self.user)
