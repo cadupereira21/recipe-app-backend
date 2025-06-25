@@ -9,7 +9,8 @@ router = DefaultRouter()
 """ Create endpoint /recipe
     Since we are using ModelViewSet it is going to support all available HTTP methods
 """
-router.register('', views.RecipeViewSet)
+router.register('tag', views.TagViewSet, basename='tag')
+router.register('', views.RecipeViewSet, basename='recipe')
 
 app_name = 'recipe'
 
